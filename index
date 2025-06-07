@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تشخیص بیماری برگ</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .content {
+            padding: 30px 20px;
+        }
+
+        .camera-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #videoElement {
+            width: 100%;
+            max-width: 300px;
+            height: 200px;
+            border-radius: 15px;
+            background: #f0f0f0;
+            object-fit: cover;
+            display: none;
+        }
+
+        .camera-placeholder {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #f0f0f0, #e0e0e0);
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: #666;
+            border: 2px dashed #ccc;
+        }
+
+        .camera-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(45deg, #2196F3, #1976D2);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .result-section {
+            margin-top: 30px;
+            padding: 20px;
+            border-radius: 15px;
+            display: none;
+        }
+
+        .result-healthy {
+            background: linear-gradient(45deg, #4CAF50, #45a049);
+            color: white;
+        }
+
+        .result-diseased {
+            background: linear-gradient(45deg, #f44336, #d32f2f);
+            color: white;
+        }
+
+        .result-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .result-description {
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        .captured-image {
+            width: 100%;
+            max-width: 250px;
+            height: 150px;
+            border-radius: 10px;
+            object-fit: cover;
+            margin: 15px auto;
+            display: block;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tips {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 15px;
+            margin-top: 20px;
+        }
+
+        .tips h3 {
+            color: #333;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .tips ul {
+            color: #666;
+            line-height: 1.8;
+        }
+
+        .tips li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌿 تشخیص بیماری برگ</h1>
+            <p>برگ درخت خود را اسکن کنید</p>
+        </div>
+
+        <div class="content">
+            <div class="camera-section">
+                <video id="videoElement" autoplay muted playsinline></video>
+                <div id="cameraPlaceholder" class="camera-placeholder">
+                    <div class="camera-icon">📷</div>
+                    <p>دوربین آماده نیست</p>
+                </div>
+            </div>
+
+            <button id="startCamera" class="btn btn-primary">🎥 روشن کردن دوربین</button>
+            <button id="captureBtn" class="btn btn-secondary" disabled>📸 عکس گرفتن</button>
+
+            <div id="loading" class="loading">
+                <div class="spinner"></div>
+                <p>در حال تحلیل تصویر...</p>
+            </div>
+
+            <div id="resultSection" class="result-section">
+                <div id="resultTitle" class="result-title"></div>
+                <img id="capturedImage" class="captured-image" style="display: none;">
+                <div id="resultDescription" class="result-description"></div>
+            </div>
+
+            <div class="tips">
+                <h3>💡 نکات مهم</h3>
+                <ul>
+                    <li>برگ را در نور مناسب قرار دهید</li>
+                    <li>کل برگ در کادر قرار گیرد</li>
+                    <li>دوربین را ثابت نگه دارید</li>
+                    <li>از زاویه مناسب عکس بگیرید</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let videoElement = document.getElementById('videoElement');
+        let cameraPlaceholder = document.getElementById('cameraPlaceholder');
+        let startCameraBtn = document.getElementById('startCamera');
+        let captureBtn = document.getElementById('captureBtn');
+        let resultSection = document.getElementById('resultSection');
+        let loading = document.getElementById('loading');
+        let stream = null;
+
+        // شروع دوربین
+        startCameraBtn.addEventListener('click', async () => {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: 'environment',
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                videoElement.srcObject = stream;
+                videoElement.style.display = 'block';
+                cameraPlaceholder.style.display = 'none';
+                captureBtn.disabled = false;
+                startCameraBtn.textContent = '⏹️ توقف دوربین';
+                startCameraBtn.onclick = stopCamera;
+                
+            } catch (error) {
+                alert('خطا در دسترسی به دوربین: ' + error.message);
+            }
+        });
+
+        // توقف دوربین
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+                stream = null;
+            }
+            videoElement.style.display = 'none';
+            cameraPlaceholder.style.display = 'flex';
+            captureBtn.disabled = true;
+            startCameraBtn.textContent = '🎥 روشن کردن دوربین';
+            startCameraBtn.onclick = () => startCameraBtn.click();
+        }
+
+        // گرفتن عکس و تحلیل
+        captureBtn.addEventListener('click', () => {
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            canvas.width = videoElement.videoWidth;
+            canvas.height = videoElement.videoHeight;
+            context.drawImage(videoElement, 0, 0);
+            
+            const imageData = canvas.toDataURL('image/jpeg', 0.8);
+            
+            // نمایش لودینگ
+            loading.style.display = 'block';
+            resultSection.style.display = 'none';
+            
+            // شبیه‌سازی تحلیل تصویر
+            setTimeout(() => {
+                analyzeLeaf(imageData);
+            }, 2000);
+        });
+
+        // تحلیل برگ (شبیه‌سازی هوش مصنوعی)
+        function analyzeLeaf(imageData) {
+            loading.style.display = 'none';
+            
+            // شبیه‌سازی نتیجه تصادفی
+            const isHealthy = Math.random() > 0.4;
+            const diseases = [
+                {
+                    name: 'لکه قهوه‌ای برگ',
+                    description: 'این بیماری قارچی است که باعث ایجاد لکه‌های قهوه‌ای روی برگ می‌شود. توصیه می‌شود از قارچ‌کش مناسب استفاده کنید.'
+                },
+                {
+                    name: 'پژمردگی برگ',
+                    description: 'علت احتمالی کمبود آب یا مشکل در ریشه درخت است. آبیاری منظم و بررسی وضعیت خاک ضروری است.'
+                },
+                {
+                    name: 'حمله آفات',
+                    description: 'وجود آفات روی برگ مشاهده می‌شود. استفاده از حشره‌کش طبیعی یا شیمیایی پیشنهاد می‌شود.'
+                }
+            ];
+            
+            const capturedImage = document.getElementById('capturedImage');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultDescription = document.getElementById('resultDescription');
+            
+            capturedImage.src = imageData;
+            capturedImage.style.display = 'block';
+            
+            if (isHealthy) {
+                resultSection.className = 'result-section result-healthy';
+                resultTitle.textContent = '✅ برگ سالم';
+                resultDescription.innerHTML = `
+                    <p><strong>تبریک!</strong> برگ مورد بررسی کاملاً سالم است.</p>
+                    <p>رنگ سبز یکنواخت و عدم وجود لکه یا آسیب نشان‌دهنده سلامت خوب گیاه است.</p>
+                    <p><strong>توصیه:</strong> ادامه مراقبت معمول از گیاه</p>
+                `;
+            } else {
+                const randomDisease = diseases[Math.floor(Math.random() * diseases.length)];
+                resultSection.className = 'result-section result-diseased';
+                resultTitle.textContent = '⚠️ برگ بیمار';
+                resultDescription.innerHTML = `
+                    <p><strong>تشخیص:</strong> ${randomDisease.name}</p>
+                    <p>${randomDisease.description}</p>
+                    <p><strong>توصیه:</strong> در صورت گسترش بیماری، با متخصص باغبانی مشورت کنید.</p>
+                `;
+            }
+            
+            resultSection.style.display = 'block';
+            
+            // اسکرول به نتایج
+            resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // غیرفعال کردن دوربین هنگام بستن صفحه
+        window.addEventListener('beforeunload', () => {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        });
+    </script>
+</body>
+</html>
